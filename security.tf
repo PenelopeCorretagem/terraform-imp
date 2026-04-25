@@ -34,10 +34,10 @@ resource "aws_security_group" "private_sg" {
   }
 
   ingress {
-    from_port = 3306
-    to_port   = 3306
-    protocol  = "tcp"
-    security_groups = [aws_security_group.private_sg.id]
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {

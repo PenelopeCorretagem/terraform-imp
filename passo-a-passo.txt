@@ -1,0 +1,128 @@
+PASSO A PASSO - SUBIR TERRAFORM NO CLOUDSHELL
+================================================
+
+========================================================================
+FLUXO A - VERSAO SIMPLIFICADA (main)
+Apenas sobe VPC, redes, maquinas e portas. Pacotes instalados via user_data.
+JARs e front voce sobe manualmente via SSH.
+========================================================================
+
+1. INSTALAR TERRAFORM
+---------------------
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum install -y terraform
+terraform -version
+
+2. CLONAR O REPO (branch main)
+--------------------------------
+cd ~
+git clone https://github.com/PenelopeCorretagem/terraform-imp.git
+cd terraform-imp
+
+3. INICIALIZAR E APLICAR
+--------------------------
+terraform init
+terraform plan
+terraform apply
+# Digita: yes
+
+4. PEGAR IP PUBLICO E CHAVE SSH
+---------------------------------
+terraform output nginx_public_ip
+
+terraform output -raw private_key_pem > penelope-key.pem
+chmod 400 penelope-key.pem
+
+5. SSH NAS INSTANCIAS
+----------------------
+# Nginx publico:
+ssh -i penelope-key.pem ubuntu@$(terraform output -raw nginx_public_ip)
+
+# Instancias privadas (via jump host pelo nginx):
+ssh -i penelope-key.pem -J ubuntu@$(terraform output -raw nginx_public_ip) ubuntu@<IP_PRIVADO>
+
+# Subir JARs via SCP (exemplo backend):
+scp -i penelope-key.pem -o ProxyJump=ubuntu@$(terraform output -raw nginx_public_ip) app.jar ubuntu@<IP_PRIVADO>:~/
+# Na instancia: java -jar app.jar &
+
+6. DESTRUIR QUANDO TERMINAR
+------------------------------
+terraform destroy
+# Digita: yes
+
+
+========================================================================
+FLUXO B - VERSAO COMPLETA COM DOCKER COMPOSE (branch com-compose)
+Sobe tudo automatizado: Docker + Compose + imagens do Docker Hub.
+========================================================================
+
+PRE-REQUISITOS:
+- Imagens Docker pushadas no Docker Hub:
+  penelopecorretagem/backend
+  penelopecorretagem/cal-service
+  penelopecorretagem/auth-service
+  penelopecorretagem/frontend
+
+---
+
+1. INSTALAR TERRAFORM (se ainda nao fez no Fluxo A)
+-----------------------------------------------------
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum install -y terraform
+terraform -version
+
+2. CLONAR O REPO (branch com-compose)
+---------------------------------------
+cd ~
+git clone https://github.com/PenelopeCorretagem/terraform-imp.git
+cd terraform-imp
+git checkout fix/docker_compose
+
+3. CONFERIR ARQUIVOS
+---------------------
+ls user_data/
+# Esperado: auth.sh  backend.sh  frontend.sh  micro.sh  mysql.sh  nginx.conf.tpl  nginx_public.sh
+
+4. INICIALIZAR TERRAFORM
+--------------------------
+terraform init
+
+5. VERIFICAR O PLANO
+----------------------
+terraform plan
+# Deve mostrar 7 EC2, 1 VPC, 2 subnets, 1 IGW, 1 NAT, 2 SGs, 1 key pair, 1 EIP
+
+6. APLICAR
+-----------
+terraform apply
+# Digita: yes
+
+7. PEGAR IP PUBLICO E CHAVE SSH
+---------------------------------
+terraform output nginx_public_ip
+
+terraform output -raw private_key_pem > penelope-key.pem
+chmod 400 penelope-key.pem
+
+8. TESTAR (aguardar 3-5 min pro user_data rodar)
+--------------------------------------------------
+curl http://$(terraform output -raw nginx_public_ip)
+
+9. SSH (se precisar debugar)
+-----------------------------
+# Nginx publico:
+ssh -i penelope-key.pem ubuntu@$(terraform output -raw nginx_public_ip)
+
+# Instancias privadas (via jump host):
+ssh -i penelope-key.pem -J ubuntu@$(terraform output -raw nginx_public_ip) ubuntu@<IP_PRIVADO>
+
+# Dentro da instancia, verificar:
+docker ps
+docker logs <nome_do_container>
+
+10. DESTRUIR QUANDO TERMINAR
+------------------------------
+terraform destroy
+# Digita: yes
