@@ -8,55 +8,101 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"]
 }
-resource "aws_instance" "nginx_public" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public.id
-  security_groups = [aws_security_group.public_sg.id]
 
-  user_data = file("user_data/nginx_public.sh")
-
-  tags = { Name = "nginx-public" }
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
-resource "aws_instance" "backend" {
-  count         = 2
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.private.id
-  security_groups = [aws_security_group.private_sg.id]
 
-  user_data = file("user_data/backend.sh")
+resource "aws_key_pair" "deployer" {
+  key_name   = "penelope-key"
+  public_key = tls_private_key.ssh.public_key_openssh
+}
+
+resource "aws_instance" "mysql" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.small"
+  subnet_id              = aws_subnet.private.id
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name               = aws_key_pair.deployer.key_name
+
+  user_data = file("user_data/mysql.sh")
+
+  tags = { Name = "mysql" }
+}
+
+resource "aws_instance" "auth" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.private.id
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name               = aws_key_pair.deployer.key_name
+
+  user_data = templatefile("user_data/auth.sh", {
+    mysql_ip = aws_instance.mysql.private_ip
+  })
+
+  tags = { Name = "auth-service" }
+}
+
+resource "aws_instance" "backend" {
+  count                  = 2
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.private.id
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name               = aws_key_pair.deployer.key_name
+
+  user_data = templatefile("user_data/backend.sh", {
+    mysql_ip = aws_instance.mysql.private_ip
+    auth_ip  = aws_instance.auth.private_ip
+  })
 
   tags = { Name = "backend-${count.index}" }
 }
+
 resource "aws_instance" "micro" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.private.id
-  security_groups = [aws_security_group.private_sg.id]
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.private.id
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name               = aws_key_pair.deployer.key_name
 
-  user_data = file("user_data/micro.sh")
+  user_data = templatefile("user_data/micro.sh", {
+    mysql_ip = aws_instance.mysql.private_ip
+    auth_ip  = aws_instance.auth.private_ip
+  })
 
-  tags = { Name = "microservice" }
+  tags = { Name = "cal-service" }
 }
+
 resource "aws_instance" "frontend" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.private.id
-  security_groups = [aws_security_group.private_sg.id]
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.private.id
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name               = aws_key_pair.deployer.key_name
 
   user_data = file("user_data/frontend.sh")
 
   tags = { Name = "frontend" }
 }
-resource "aws_instance" "mysql" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.small"
-  subnet_id     = aws_subnet.private.id
-  security_groups = [aws_security_group.private_sg.id]
 
-  user_data = file("user_data/mysql.sh")
+resource "aws_instance" "nginx_public" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.public_sg.id]
+  key_name               = aws_key_pair.deployer.key_name
 
-  tags = { Name = "mysql" }
+  user_data = templatefile("user_data/nginx_public.sh", {
+    nginx_config = templatefile("user_data/nginx.conf.tpl", {
+      backend_ips = aws_instance.backend[*].private_ip
+      micro_ip    = aws_instance.micro.private_ip
+      frontend_ip = aws_instance.frontend.private_ip
+    })
+  })
+
+  tags = { Name = "nginx-public" }
 }
 
