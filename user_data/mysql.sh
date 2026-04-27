@@ -11,9 +11,9 @@ cd /opt/app
 
 # Init SQL
 cat > init.sql <<'EOSQL'
-CREATE DATABASE IF NOT EXISTS app_db;
-CREATE DATABASE IF NOT EXISTS microservice_db;
-CREATE DATABASE IF NOT EXISTS auth_db;
+CREATE DATABASE IF NOT EXISTS penelopec;
+CREATE DATABASE IF NOT EXISTS calservice;
+CREATE DATABASE IF NOT EXISTS auth;
 CREATE USER IF NOT EXISTS 'app_user'@'%' IDENTIFIED BY 'app_password';
 GRANT ALL PRIVILEGES ON *.* TO 'app_user'@'%';
 FLUSH PRIVILEGES;
@@ -34,6 +34,16 @@ services:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     command: --bind-address=0.0.0.0
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 
 volumes:
   mysql_data:

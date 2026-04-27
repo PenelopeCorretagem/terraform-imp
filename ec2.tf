@@ -54,8 +54,9 @@ resource "aws_instance" "backend" {
   key_name               = aws_key_pair.deployer.key_name
 
   user_data = templatefile("user_data/backend.sh", {
-    mysql_ip = aws_instance.mysql.private_ip
-    auth_ip  = aws_instance.auth.private_ip
+    mysql_ip   = aws_instance.mysql.private_ip
+    auth_ip    = aws_instance.auth.private_ip
+    jwt_secret = var.jwt_secret
   })
 
   tags = { Name = "backend-${count.index}" }
@@ -70,7 +71,6 @@ resource "aws_instance" "micro" {
 
   user_data = templatefile("user_data/micro.sh", {
     mysql_ip = aws_instance.mysql.private_ip
-    auth_ip  = aws_instance.auth.private_ip
   })
 
   tags = { Name = "cal-service" }

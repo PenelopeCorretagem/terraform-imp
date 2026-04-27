@@ -19,10 +19,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://${mysql_ip}:3306/microservice_db
-      SPRING_DATASOURCE_USERNAME: app_user
-      SPRING_DATASOURCE_PASSWORD: app_password
-      AUTH_SERVICE_URL: http://${auth_ip}:8080
+      DB_HOST: ${mysql_ip}
+      DB_PORT: 3306
+      DB_NAME: calservice
+      DB_USER: app_user
+      DB_PASSWORD: app_password
 EOF
 
 docker compose up -d

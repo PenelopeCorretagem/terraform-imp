@@ -19,9 +19,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://${mysql_ip}:3306/auth_db
-      SPRING_DATASOURCE_USERNAME: app_user
-      SPRING_DATASOURCE_PASSWORD: app_password
+      DB_HOST: ${mysql_ip}
+      DB_PORT: 3306
+      DB_NAME: auth
+      DB_USER: app_user
+      DB_PASSWORD: app_password
 EOF
 
 docker compose up -d

@@ -12,7 +12,7 @@ http {
     listen 80;
 
     location /api/ {
-      proxy_pass http://backend_cluster/;
+      proxy_pass http://backend_cluster/api/;
     }
 
     location /micro/ {
