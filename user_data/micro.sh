@@ -31,11 +31,19 @@ done
 
 # .env com secrets (injetado pelo Terraform)
 cat > .env <<EOF
+SPRING_PROFILES_ACTIVE=prod
 DB_HOST=${mysql_ip}
 DB_PORT=3306
 DB_NAME=penelopec
 DB_USER=${db_user}
 DB_PASSWORD=${db_password}
+RABBITMQ_HOST=${mysql_ip}
+RABBITMQ_PORT=5672
+RABBITMQ_DEFAULT_USER=${rabbitmq_user}
+RABBITMQ_DEFAULT_PASS=${rabbitmq_password}
+CALCOM_API_KEY=${calcom_api_key}
+MONOLITH_BASE_URL=http://${backend_ip}:8080
+AUTH_SERVICE_BASE_URL=http://${auth_ip}:8080/api
 EOF
 chmod 600 .env
 

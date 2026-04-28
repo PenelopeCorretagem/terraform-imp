@@ -68,7 +68,13 @@ rm -f penelope-key.pem
 terraform output -raw private_key_pem > penelope-key.pem
 chmod 400 penelope-key.pem
 
-# 6. Resumo
+# 6. Enviar chave pro nginx
+echo "[6/6] Enviando chave SSH para o nginx..."
+sleep 30  # aguardar nginx aceitar SSH
+scp -i penelope-key.pem -o StrictHostKeyChecking=no penelope-key.pem ubuntu@$NGINX_IP:~/penelope-key.pem
+ssh -i penelope-key.pem -o StrictHostKeyChecking=no ubuntu@$NGINX_IP "chmod 400 ~/penelope-key.pem"
+
+# 7. Resumo
 echo ""
 echo "========================================="
 echo "  Deploy concluido!"
