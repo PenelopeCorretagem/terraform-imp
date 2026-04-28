@@ -39,7 +39,8 @@ resource "aws_instance" "auth" {
   key_name               = aws_key_pair.deployer.key_name
 
   user_data = templatefile("user_data/auth.sh", {
-    mysql_ip = aws_instance.mysql.private_ip
+    mysql_ip   = aws_instance.mysql.private_ip
+    jwt_secret = var.jwt_secret
   })
 
   tags = { Name = "auth-service" }
