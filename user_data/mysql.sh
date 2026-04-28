@@ -12,8 +12,6 @@ cd /opt/app
 # Init SQL
 cat > init.sql <<'EOSQL'
 CREATE DATABASE IF NOT EXISTS penelopec;
-CREATE DATABASE IF NOT EXISTS calservice;
-CREATE DATABASE IF NOT EXISTS auth;
 CREATE USER IF NOT EXISTS 'app_user'@'%' IDENTIFIED BY 'app_password';
 GRANT ALL PRIVILEGES ON *.* TO 'app_user'@'%';
 FLUSH PRIVILEGES;
