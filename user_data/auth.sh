@@ -18,6 +18,10 @@ systemctl start docker
 mkdir -p /opt/app
 cd /opt/app
 
+# Esperar backend Flyway rodar primeiro (banco compartilhado)
+echo "Aguardando 120s para o backend rodar Flyway primeiro..."
+sleep 120
+
 # .env com secrets (injetado pelo Terraform)
 cat > .env <<EOF
 SPRING_PROFILES_ACTIVE=prod
