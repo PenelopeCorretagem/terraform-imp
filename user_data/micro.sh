@@ -12,7 +12,7 @@ cd /opt/app
 # Esperar backend subir (flyway precisa rodar primeiro - mesmo banco)
 echo "Aguardando backend ficar pronto..."
 for i in $(seq 1 60); do
-  if curl -sf -o /dev/null -w "%{http_code}" http://${backend_ip}:8080/api/ 2>/dev/null | grep -qE "^[2-4]"; then
+  if curl -sf -o /dev/null -w "%%{http_code}" http://${backend_ip}:8080/api/ 2>/dev/null | grep -qE "^[2-4]"; then
     echo "Backend respondeu! Iniciando cal-service..."
     break
   fi
