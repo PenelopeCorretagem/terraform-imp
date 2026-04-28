@@ -70,8 +70,11 @@ resource "aws_instance" "micro" {
   key_name               = aws_key_pair.deployer.key_name
 
   user_data = templatefile("user_data/micro.sh", {
-    mysql_ip = aws_instance.mysql.private_ip
+    mysql_ip   = aws_instance.mysql.private_ip
+    backend_ip = aws_instance.backend[0].private_ip
   })
+
+  depends_on = [aws_instance.backend]
 
   tags = { Name = "cal-service" }
 }
