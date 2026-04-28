@@ -26,7 +26,12 @@ resource "aws_instance" "mysql" {
   vpc_security_group_ids = [aws_security_group.private_sg.id]
   key_name               = aws_key_pair.deployer.key_name
 
-  user_data = file("user_data/mysql.sh")
+  user_data = templatefile("user_data/mysql.sh", {
+    db_user           = var.db_user
+    db_password       = var.db_password
+    rabbitmq_user     = var.rabbitmq_user
+    rabbitmq_password = var.rabbitmq_password
+  })
 
   tags = { Name = "mysql" }
 }
@@ -39,8 +44,10 @@ resource "aws_instance" "auth" {
   key_name               = aws_key_pair.deployer.key_name
 
   user_data = templatefile("user_data/auth.sh", {
-    mysql_ip   = aws_instance.mysql.private_ip
-    jwt_secret = var.jwt_secret
+    mysql_ip    = aws_instance.mysql.private_ip
+    jwt_secret  = var.jwt_secret
+    db_user     = var.db_user
+    db_password = var.db_password
   })
 
   tags = { Name = "auth-service" }
@@ -55,9 +62,20 @@ resource "aws_instance" "backend" {
   key_name               = aws_key_pair.deployer.key_name
 
   user_data = templatefile("user_data/backend.sh", {
-    mysql_ip   = aws_instance.mysql.private_ip
-    auth_ip    = aws_instance.auth.private_ip
-    jwt_secret = var.jwt_secret
+    mysql_ip              = aws_instance.mysql.private_ip
+    auth_ip               = aws_instance.auth.private_ip
+    jwt_secret            = var.jwt_secret
+    db_user               = var.db_user
+    db_password           = var.db_password
+    rabbitmq_user         = var.rabbitmq_user
+    rabbitmq_password     = var.rabbitmq_password
+    email                 = var.email
+    email_password        = var.email_password
+    calcom_api_key        = var.calcom_api_key
+    calcom_webhook_secret = var.calcom_webhook_secret
+    cloudinary_cloud_name = var.cloudinary_cloud_name
+    cloudinary_api_key    = var.cloudinary_api_key
+    cloudinary_api_secret = var.cloudinary_api_secret
   })
 
   tags = { Name = "backend-${count.index}" }
@@ -71,8 +89,10 @@ resource "aws_instance" "micro" {
   key_name               = aws_key_pair.deployer.key_name
 
   user_data = templatefile("user_data/micro.sh", {
-    mysql_ip   = aws_instance.mysql.private_ip
-    backend_ip = aws_instance.backend[0].private_ip
+    mysql_ip    = aws_instance.mysql.private_ip
+    backend_ip  = aws_instance.backend[0].private_ip
+    db_user     = var.db_user
+    db_password = var.db_password
   })
 
   depends_on = [aws_instance.backend]

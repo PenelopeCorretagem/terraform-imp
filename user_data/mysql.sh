@@ -10,12 +10,20 @@ mkdir -p /opt/app
 cd /opt/app
 
 # Init SQL
-cat > init.sql <<'EOSQL'
+cat > init.sql <<EOSQL
 CREATE DATABASE IF NOT EXISTS penelopec;
-CREATE USER IF NOT EXISTS 'app_user'@'%' IDENTIFIED BY 'app_password';
-GRANT ALL PRIVILEGES ON *.* TO 'app_user'@'%';
+CREATE USER IF NOT EXISTS '${db_user}'@'%' IDENTIFIED BY '${db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${db_user}'@'%';
 FLUSH PRIVILEGES;
 EOSQL
+
+# .env com secrets
+cat > .env <<EOF
+MYSQL_ROOT_PASSWORD=root
+RABBITMQ_DEFAULT_USER=${rabbitmq_user}
+RABBITMQ_DEFAULT_PASS=${rabbitmq_password}
+EOF
+chmod 600 .env
 
 # Docker Compose
 cat > docker-compose.yml <<'EOF'
@@ -26,8 +34,8 @@ services:
     restart: always
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
+    env_file:
+      - .env
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -39,9 +47,8 @@ services:
     restart: always
     ports:
       - "5672:5672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+    env_file:
+      - .env
 
 volumes:
   mysql_data:

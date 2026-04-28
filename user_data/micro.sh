@@ -20,8 +20,18 @@ for i in $(seq 1 60); do
   sleep 10
 done
 
+# .env com secrets (injetado pelo Terraform)
+cat > .env <<EOF
+DB_HOST=${mysql_ip}
+DB_PORT=3306
+DB_NAME=penelopec
+DB_USER=${db_user}
+DB_PASSWORD=${db_password}
+EOF
+chmod 600 .env
+
 # Docker Compose
-cat > docker-compose.yml <<EOF
+cat > docker-compose.yml <<'EOF'
 services:
   cal-service:
     image: penelopecorretagem/cal-service:latest
@@ -29,12 +39,8 @@ services:
     restart: always
     ports:
       - "8080:8080"
-    environment:
-      DB_HOST: ${mysql_ip}
-      DB_PORT: 3306
-      DB_NAME: penelopec
-      DB_USER: app_user
-      DB_PASSWORD: app_password
+    env_file:
+      - .env
 EOF
 
 docker compose up -d

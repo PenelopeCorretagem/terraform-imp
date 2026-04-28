@@ -1,0 +1,15 @@
+# Copie este arquivo para terraform.tfvars e preencha os valores
+# NÃO commite o terraform.tfvars no repositório!
+
+jwt_secret            = "sua-chave-jwt-secreta"
+db_user               = "app_user"
+db_password           = "sua-senha-do-banco"
+rabbitmq_user         = "penelopec-rebbitmq"
+rabbitmq_password     = "sua-senha-rabbitmq"
+email                 = "seu-email@gmail.com"
+email_password        = "sua-senha-de-app"
+calcom_api_key        = "sua-calcom-api-key"
+calcom_webhook_secret = "seu-calcom-webhook-secret"
+cloudinary_cloud_name = "seu-cloud-name"
+cloudinary_api_key    = "sua-cloudinary-api-key"
+cloudinary_api_secret = "seu-cloudinary-api-secret"
