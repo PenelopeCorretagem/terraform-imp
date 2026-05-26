@@ -7,7 +7,7 @@ set -e
 #############################################
 
 REPO_URL="https://github.com/PenelopeCorretagem/terraform-imp.git"
-BRANCH="fix/docker_compose"
+BRANCH="main"
 DIR="/tmp/terraform-imp"
 
 echo "========================================="
