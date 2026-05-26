@@ -1,15 +1,66 @@
 #!/bin/bash
-apt update -y
-apt install -y mysql-server
+set -e
 
-systemctl start mysql
+# Aguardar rede (NAT Gateway pode demorar)
+for i in $(seq 1 30); do
+  if curl -sf --max-time 5 https://get.docker.com > /dev/null 2>&1; then
+    break
+  fi
+  echo "Aguardando rede... tentativa $i/30"
+  sleep 10
+done
 
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';"
-mysql -e "CREATE DATABASE penelopec;"
-mysql -e "CREATE DATABASE calservice;"
-mysql -e "CREATE DATABASE auth;"
-mysql -e "CREATE USER 'app_user'@'%' IDENTIFIED BY 'app_password';"
-mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'app_user'@'%'; FLUSH PRIVILEGES;"
+# Install Docker
+curl -fsSL https://get.docker.com | sh
+systemctl enable docker
+systemctl start docker
 
-sed -i 's/bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
-systemctl restart mysql
+mkdir -p /opt/app
+cd /opt/app
+
+# Init SQL
+cat > init.sql <<EOSQL
+CREATE DATABASE IF NOT EXISTS penelopec;
+CREATE USER IF NOT EXISTS '${db_user}'@'%' IDENTIFIED BY '${db_password}';
+GRANT ALL PRIVILEGES ON *.* TO '${db_user}'@'%';
+FLUSH PRIVILEGES;
+EOSQL
+
+# .env com secrets
+cat > .env <<EOF
+MYSQL_ROOT_PASSWORD=root
+RABBITMQ_DEFAULT_USER=${rabbitmq_user}
+RABBITMQ_DEFAULT_PASS=${rabbitmq_password}
+EOF
+chmod 600 .env
+
+# Docker Compose
+cat > docker-compose.yml <<'EOF'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --bind-address=0.0.0.0
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+    env_file:
+      - .env
+
+volumes:
+  mysql_data:
+EOF
+
+docker compose up -d
