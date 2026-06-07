@@ -6,10 +6,6 @@ set -e
 # Rodar no AWS CloudShell
 #############################################
 
-REPO_URL="https://github.com/PenelopeCorretagem/terraform-imp.git"
-BRANCH="main"
-DIR="/tmp/terraform-imp"
-
 echo "========================================="
 echo "  Penelope - Deploy Automatizado"
 echo "========================================="
@@ -24,20 +20,7 @@ else
   echo "[1/6] Terraform ja instalado: $(terraform -version | head -1)"
 fi
 
-# 2. Clonar ou atualizar repo
-echo "[2/6] Preparando repositorio..."
-if [ -d "$DIR" ]; then
-  cd "$DIR"
-  git fetch --all
-  git checkout "$BRANCH"
-  git pull origin "$BRANCH"
-else
-  git clone "$REPO_URL" "$DIR"
-  cd "$DIR"
-  git checkout "$BRANCH"
-fi
-
-# 3. Criar terraform.tfvars se nao existir
+# 2. Criar terraform.tfvars se nao existir
 if [ ! -f terraform.tfvars ]; then
   echo ""
   echo "========================================="
