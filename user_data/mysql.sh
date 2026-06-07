@@ -64,7 +64,7 @@ services:
     container_name: penelope-redis
     restart: unless-stopped
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "6379:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
