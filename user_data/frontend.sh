@@ -19,7 +19,7 @@ mkdir -p /opt/app
 cd /opt/app
 
 # Docker Compose
-cat > docker-compose.yml <<'EOF'
+cat > docker-compose.yml <<EOF
 services:
   frontend:
     image: penelopecorretagem/frontend:latest
@@ -27,6 +27,8 @@ services:
     restart: always
     ports:
       - "80:80"
+    extra_hosts:
+      - "penelope-api:${backend_ip}"
 EOF
 
 docker compose up -d

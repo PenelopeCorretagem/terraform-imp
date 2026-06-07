@@ -111,7 +111,9 @@ resource "aws_instance" "frontend" {
   vpc_security_group_ids = [aws_security_group.private_sg.id]
   key_name               = aws_key_pair.deployer.key_name
 
-  user_data = file("user_data/frontend.sh")
+  user_data = templatefile("user_data/frontend.sh", {
+    backend_ip = aws_instance.backend[0].private_ip
+  })
 
   tags = { Name = "frontend" }
 }
