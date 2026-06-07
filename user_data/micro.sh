@@ -44,6 +44,7 @@ RABBITMQ_DEFAULT_PASS=${rabbitmq_password}
 CALCOM_API_KEY=${calcom_api_key}
 MONOLITH_BASE_URL=http://${backend_ip}:8080
 AUTH_SERVICE_BASE_URL=http://${auth_ip}:8080/api
+USER_SERVICE_BASE_URL=http://${backend_ip}:8080/api
 EOF
 chmod 600 .env
 
