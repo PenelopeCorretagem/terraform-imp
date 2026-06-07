@@ -44,10 +44,12 @@ resource "aws_instance" "auth" {
   key_name               = aws_key_pair.deployer.key_name
 
   user_data = templatefile("user_data/auth.sh", {
-    mysql_ip    = aws_instance.mysql.private_ip
-    jwt_secret  = var.jwt_secret
-    db_user     = var.db_user
-    db_password = var.db_password
+    mysql_ip       = aws_instance.mysql.private_ip
+    jwt_secret     = var.jwt_secret
+    db_user        = var.db_user
+    db_password    = var.db_password
+    email          = var.email
+    email_password = var.email_password
   })
 
   tags = { Name = "auth-service" }
@@ -113,6 +115,7 @@ resource "aws_instance" "frontend" {
 
   user_data = templatefile("user_data/frontend.sh", {
     backend_ip = aws_instance.backend[0].private_ip
+    micro_ip   = aws_instance.micro.private_ip
   })
 
   tags = { Name = "frontend" }

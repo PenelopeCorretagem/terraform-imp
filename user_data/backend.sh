@@ -41,11 +41,15 @@ CALCOM_WEBHOOK_SECRET=${calcom_webhook_secret}
 CLOUDINARY_CLOUD_NAME=${cloudinary_cloud_name}
 CLOUDINARY_API_KEY=${cloudinary_api_key}
 CLOUDINARY_API_SECRET=${cloudinary_api_secret}
+REDIS_HOST=${mysql_ip}
+REDIS_PORT=6379
+SPRING_DATA_REDIS_HOST=${mysql_ip}
+SPRING_DATA_REDIS_PORT=6379
 EOF
 chmod 600 .env
 
 # Docker Compose
-cat > docker-compose.yml <<'EOF'
+cat > docker-compose.yml <<EOF
 services:
   backend:
     image: penelopecorretagem/backend:latest
@@ -55,6 +59,9 @@ services:
       - "8080:8081"
     env_file:
       - .env
+    extra_hosts:
+      - "redis:${mysql_ip}"
+      - "penelope-redis:${mysql_ip}"
 EOF
 
 docker compose up -d

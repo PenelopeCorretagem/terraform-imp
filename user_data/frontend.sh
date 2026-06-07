@@ -29,6 +29,7 @@ services:
       - "80:80"
     extra_hosts:
       - "penelope-api:${backend_ip}"
+      - "penelope-cal:${micro_ip}"
 EOF
 
 docker compose up -d

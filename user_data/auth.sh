@@ -32,6 +32,10 @@ DB_USER=${db_user}
 DB_PASSWORD=${db_password}
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 JWT_API_KEY=${jwt_secret}
+EMAIL=${email}
+EMAIL_PASSWORD=${email_password}
+SPRING_MAIL_USERNAME=${email}
+SPRING_MAIL_PASSWORD=${email_password}
 EOF
 chmod 600 .env
 
